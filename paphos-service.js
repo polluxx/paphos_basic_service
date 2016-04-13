@@ -21,26 +21,23 @@ function BaseService(app, collection) {
   };*/
 
   console.log("Initialize new base service");
-
-
   try {
     this.db = this.app.db;
-
   } catch (err) {
     console.error(err);
     next(err);
   }
 }
 
-BaseService.prototype.CheckStack = function (next) {
+BaseService.prototype.checkStack = function (next) {
   var uncheckedServicesList = this.db[this.collection].find({status: 0});
   if (!uncheckedServicesList.length) return next();
 
   var self = this;
 
-  var checkList = uncheckedServicesList.map((record) => {
+  var checkList = uncheckedServicesList.map(record => {
     return new Promise(function (resolve, reject) {
-      self.Serve(record, reject);
+      self.serve(record, reject);
     });
   })
 
@@ -52,15 +49,15 @@ BaseService.prototype.CheckStack = function (next) {
     .catch(next);
 };
 
-BaseService.prototype.Call = function (clientData, next) {
+BaseService.prototype.call = function (clientData, next) {
   var self = this;
 
   async.auto({
       validate: next => {
-        self.Validate(clientData, next);
+        self.validate(clientData, next);
       },
       saveClient: ['validate', (next, result) => {
-        self.AddClient(result.validate, next);
+        self.addClient(result.validate, next);
       }]
     },
     err => {
@@ -72,11 +69,9 @@ BaseService.prototype.Call = function (clientData, next) {
       console.info("Successfully connected with client ID - " + clientData.clientUrl);
       next();
     });
-
-
 }
 
-BaseService.prototype.Ping = function (clientUrl, next) {
+BaseService.prototype.ping = function (clientUrl, next) {
   try {
     var record = this.db[this.collection].findOne({clientUrl: clientUrl});
     if (!record) return next("There are no subscriber with ID: " + clientUrl);
@@ -89,24 +84,19 @@ BaseService.prototype.Ping = function (clientUrl, next) {
   }
 };
 
-BaseService.prototype.Serve = function (clientData, next) {
+BaseService.prototype.serve = function (clientData, next) {
   var self = this,
   configForm = this.app.serviceConfig;
 
-  var clientUrl = clientData.clientUrl;
-  if(!/http/.test(clientUrl)) {
-    clientUrl = subscriptionConfig.protocol + "://" + clientUrl;
-  }
   async.auto({
     send: function (next) {
       request
         .post({
-            url: clientUrl + "/" + subscriptionConfig.method,
+            url: clientData.clientUrl + "/" + subscriptionConfig.method,
             form: configForm
           },
-          function (err, response, body) {
+          function (err, response) {
             if (err || response.statusCode !== 200) {
-
               err = err || "An error occured when trying to send post req to: " + clientData.clientUrl;
               console.error(err);
               return next(err);
@@ -115,8 +105,6 @@ BaseService.prototype.Serve = function (clientData, next) {
             console.info("Successfully subscribe client.");
             next();
           });
-
-      next();
     },
     updateRecord: ['send', function (next) {
       var find = {clientUrl: clientData.clientUrl},
@@ -145,11 +133,9 @@ BaseService.prototype.Serve = function (clientData, next) {
       }
     }]
   });
-
-  next();
 };
 
-BaseService.prototype.AddClient = function (clientData, next) {
+BaseService.prototype.addClient = function (clientData, next) {
 
   var self = this;
 
@@ -190,7 +176,7 @@ BaseService.prototype.AddClient = function (clientData, next) {
       }],
       // send request to subscriber
       serve: ['insert', function (next, record) {
-        self.Serve(record.insert, next);
+        self.serve(record.insert, next);
       }]
     },
     function (err) {
@@ -204,26 +190,15 @@ BaseService.prototype.AddClient = function (clientData, next) {
   next();
 };
 
-BaseService.prototype.Validate = function (clientData, next) {
-  var self = this, clientObjectKeys = Object.keys(clientData);
-  var results = clientObjectKeys.filter(key => {
-    return ~self.defaultClientData.indexOf(key);
-  });
-  if (this.defaultClientData.length !== results.length) return next("Please provide mandatory fields! They are: " + this.defaultClientData.join(', '));
+BaseService.prototype.validate = function (clientData, next) {
+  var self = this, mustHaveFields = [], mandatoryField;
 
-  var protocolChk = new RegExp("/~http/", "gi");
-  if (!protocolChk.test(results.clientUrl)) {
-    results.clientUrl = "http://" + results.clientUrl;
+  for(mandatoryField in this.defaultClientData) {
+      if(!clientData[mandatoryField]) mustHaveFields.push(mandatoryField);
   }
+  if (mustHaveFields.length) return next("Please provide missed fields: " + mustHaveFields.join(', '));
 
-  var resultingData = {}, param;
-
-  results.forEach(param => {
-    resultingData[param] = clientData[param];
-  });
-
-
-  next(null, resultingData);
+  next(null, clientData);
 };
 
 module.exports = BaseService;

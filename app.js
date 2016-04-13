@@ -43,7 +43,7 @@ async.auto({
     next(null, new PaphosService(app, config.db.collection, next));
   }],
   'checkStack': ['service', function (next, data) {
-    data.service.CheckStack(next);
+    data.service.checkStack(next);
   }],
   'routes': function (next, data) {
     app.use('/ok', (req, res) => res.json({ success: true }));
@@ -63,7 +63,7 @@ async.auto({
     }
 
     app.post('/api/subscription/subscribe', (req, resp, next) => {
-      data.service.Call(req.body, function (err) {
+      data.service.call(req.body, function (err) {
         if (err) {
           response(resp, err, 500);
           return next(err);
@@ -78,7 +78,7 @@ async.auto({
         return response(resp, "You must provide clientUrl param!", 500);
       }
 
-      data.service.Ping(req.query.clientUrl, function (err, result) {
+      data.service.ping(req.query.clientUrl, function (err, result) {
         if (err) {
           response(resp, err, 500);
           return next(err);
