@@ -1,0 +1,13 @@
+{
+  "url": "http://localhost:3002",
+  "apiUrl": "http://localhost:3002/api",
+  "serviceData": {
+    "name": "base_service",
+    "title": "Base service"
+  },
+  "port": 3002,
+  "db": {
+    "dir": "./db",
+    "collection": "subscribers"
+  }
+}

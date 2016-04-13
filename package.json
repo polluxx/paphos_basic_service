@@ -1,0 +1,24 @@
+{
+  "name": "base-service",
+  "version": "0.1.0",
+  "description": "basic service blueprint",
+  "main": "start.js",
+  "dependencies": {
+    "diskdb": "*",
+    "convict": "^1.0.1",
+    "cors": "^2.7.1",
+    "express": "^4.13.3",
+    "async": "^1.5.0",
+    "lodash": "^3.10.1",
+    "body-parser": "^1.14.1"
+  },
+  "scripts": {
+    "run": "node start.js"
+  },
+  "devDependencies": {
+    "mocha": "^2.4.5",
+    "request": "^2.70.0",
+    "should": "^8.3.0",
+    "supertest": "^1.2.0"
+  }
+}

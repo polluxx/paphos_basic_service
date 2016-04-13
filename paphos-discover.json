@@ -1,0 +1,7 @@
+{
+  "title": "Base service",
+  "name": "base_service",
+  "moduleUrl": "http://localhost:3002",
+  "clientUrl": "http://localhost:3002/api",
+  "pingUrl": "http://localhost:3002/ok"
+}
