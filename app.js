@@ -42,9 +42,9 @@ async.auto({
   'service': ['server', function (next) {
     next(null, new PaphosService(app, config.db.collection, next));
   }],
-  'checkStack': ['service', function (next, data) {
+  /*'checkStack': ['service', function (next, data) {
     data.service.checkStack(next);
-  }],
+  }],*/
   'routes': function (next, data) {
     app.use('/ok', (req, res) => res.json({ success: true }));
     app.use('/timeout', (req, res) => {
@@ -63,7 +63,7 @@ async.auto({
     }
 
     app.post('/api/subscription/subscribe', (req, resp, next) => {
-      data.service.call(req.body, function (err) {
+      data.service.callService(req.body, function (err) {
         if (err) {
           response(resp, err, 500);
           return next(err);

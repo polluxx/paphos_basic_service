@@ -37,19 +37,22 @@ BaseService.prototype.checkStack = function (next) {
 
   var checkList = uncheckedServicesList.map(record => {
     return new Promise(function (resolve, reject) {
-      self.serve(record, reject);
+      self.serve(record, reject, true);
     });
-  })
+  });
 
   Promise.all(checkList)
     .then(function (resp) {
       console.log(resp);
       next();
     })
-    .catch(next);
+    .catch(function(err) {
+        console.error("Error on init: "+err);
+        next();
+    });
 };
 
-BaseService.prototype.call = function (clientData, next) {
+BaseService.prototype.callService = function (clientData, next) {
   var self = this;
 
   async.auto({
@@ -90,12 +93,14 @@ BaseService.prototype.serve = function (clientData, next) {
 
   async.auto({
     send: function (next) {
+
       request
         .post({
             url: clientData.clientUrl + "/" + subscriptionConfig.method,
             form: configForm
           },
           function (err, response) {
+            
             if (err || response.statusCode !== 200) {
               err = err || "An error occured when trying to send post req to: " + clientData.clientUrl;
               console.error(err);
@@ -191,13 +196,13 @@ BaseService.prototype.addClient = function (clientData, next) {
 };
 
 BaseService.prototype.validate = function (clientData, next) {
-  var self = this, mustHaveFields = [], mandatoryField;
+  var mustHaveFields = [], mandatoryField, index;
 
-  for(mandatoryField in this.defaultClientData) {
+  for(index=0;index<this.defaultClientData.length;index++) {
+      mandatoryField = this.defaultClientData[index];
       if(!clientData[mandatoryField]) mustHaveFields.push(mandatoryField);
   }
   if (mustHaveFields.length) return next("Please provide missed fields: " + mustHaveFields.join(', '));
-
   next(null, clientData);
 };
 
