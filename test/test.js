@@ -4,63 +4,49 @@ var supertest = require('supertest'),
   express = require('express'),
   bodyParser = require('body-parser'),
   request = require('request'),
-  http_post = require('http-post'),
+  //http_post = require('http-post'),
   should = require('should');
 
+var testPostForm = require('../paphos-discover.json');
 var testclientPort = 8090,
-  clientHost = "127.0.0.1:" + config.port,
-  testClientUrl = '127.0.0.1:' + testclientPort,
-  server = supertest.agent(clientHost),
+  clientHost = "http://localhost:"+testclientPort,
+  serverAgent,
   app = express(), serverCall;
 
 var collection = config.db.collection,
   db = filedb.connect(config.db.dir, [collection]);
 
-var testPostForm = require('../paphos-discover.json');
+
 
 describe("Tests", function () {
 
   var clientApp;
-  function removeTestSample(done) {
-    db[collection].remove();
-    //db[collection].remove({clientUrl: clientHost}, true);
-    //db[collection].remove({clientUrl: testClientUrl}, true);
-    done();
-  }
-
-  before(function (done) {
-    db[collection].remove();
-
-    clientApp = require('../app');
-
-    app.use(bodyParser.urlencoded({extended: false}));
-    app.use(bodyParser.json());
-
-    serverCall = app.listen(testclientPort);
-    console.info("*** Start test server ***");
-    //removeTestSample(done);
-    done();
-  });
-  after(function (done) {
-    clientApp.server.close();
-    serverCall.close();
-    console.info("*** Stop test server ***");
-    //removeTestSample(done);
-    done();
-  });
-
   // REST tests
   describe("REST tests", function () {
 
-    this.timeout(60000);
+    before(function (done) {
+      db[collection].remove({}, true);
+
+      clientApp = require('../app'),
+      serverAgent = supertest.agent(testPostForm.moduleUrl);
+      app.use(bodyParser.urlencoded({extended: false}));
+      app.use(bodyParser.json());
+
+      serverCall = app.listen(testclientPort);
+      console.info("*** Start test server ***");
+      //removeTestSample(done);
+      done();
+    });
+
+    this.timeout(10000);
 
     it("should return default api page", function (done) {
-      server
+        serverAgent
         .get('/ok')
         .expect("Content-type", /json/)
         .expect(200)
         .end(function (err, res) {
-          if (err) throw err;
+          if (err || res.error) throw err || res.error;
 
           should(res.body.success).equal(true);
 
@@ -71,34 +57,42 @@ describe("Tests", function () {
     it("should check service call", function (done) {
 
       app.post('/api/services/subscribe', function (req, res) {
-        should(req.status).ok();
         should(req.body.error).not.equal(true);
 
         should(req.body).have.property('name', testPostForm.name);
+        should(req.body).have.property('moduleUrl', testPostForm.moduleUrl);
         should(req.body).have.property('clientUrl', testPostForm.clientUrl);
-        should(req.body).have.property('status');
-        should(+req.body.status).equal(0);
-
+        should(req.body).have.property('title', testPostForm.title);
+        //res.sendStatus(200);
         done();
       });
 
-      http_post('http://' + clientHost + '/api/subscription/subscribe', testPostForm);
-
+      request
+      .post({url: testPostForm.moduleUrl + '/api/subscription/subscribe', form:{
+          name: 'testClient',
+          clientUrl: clientHost
+      }}, function(err, data) {
+          should(data.status).not.equal(500);
+          done();
+      });
 
     });
 
     var sendTestPostData = {
-      name: "testSubscriber",
-      clientUrl: clientHost
+        name: "testSubscriber",
+        clientUrl: clientHost
     };
 
     it("should return success message for insertion in DB", function (done) {
 
-      server
+        serverAgent
         .post('/api/subscription/subscribe')
         .send(sendTestPostData)
         .end(function (err, res) {
-          if (err) throw err;
+          if (err || res.error) {
+              done();
+              throw (err || res.error);
+          }
 
           should(res.status).ok();
           should(res.body).have.property('msg');
@@ -110,11 +104,11 @@ describe("Tests", function () {
 
     it("should return subscriber data", function (done) {
 
-      server
+        serverAgent
         .get('/api/subscription/ping?clientUrl=' + clientHost)
         .end(function (err, res) {
-          if (err) throw err;
-console.info(res.statusCode)
+          if (err || res.error) throw (err || res.error);
+
           should(res.status).ok();
           should(res.body).have.property('msg');
           should(res.statusCode).equal(200);
@@ -124,26 +118,31 @@ console.info(res.statusCode)
 
           done();
         });
-    })
+    });
 
 
     it("should return ERROR message for duplicate insertion in DB", function (done) {
 
-      server
+        serverAgent
         .post('/api/subscription/subscribe')
         .send(sendTestPostData)
         .end(function (err, res) {
           if (err) throw err;
 
-          should(res.status).not.ok();
-          should(res.body).have.property('code');
-          should(res.body).have.property('message');
+          should(res.body).have.property('msg');
 
           should(res.statusCode).equal(500);
           done();
         });
     });
 
+    after(function (done) {
+      clientApp.server.close();
+      serverCall.close();
+      console.info("*** Stop test server ***");
+      //removeTestSample(done);
+      done();
+    });
 
   });
 

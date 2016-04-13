@@ -14,6 +14,7 @@ var app = express();
 app.config = config;
 
 var serviceConfig = require('./paphos-discover.json');
+app.serviceConfig = serviceConfig;
 
 async.auto({
   'db': function (next) {
@@ -57,7 +58,7 @@ async.auto({
       var responseRes = {
         msg: message
       };
-
+      
       resp.status(code).json(responseRes);
     }
 
@@ -83,7 +84,7 @@ async.auto({
           return next(err);
         }
 
-        response(resp, result.call, 200);
+        response(resp, result, 200);
       });
     });
 

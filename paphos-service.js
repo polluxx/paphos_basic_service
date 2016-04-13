@@ -12,13 +12,13 @@ function BaseService(app, collection) {
   this.client = {};
   this.collection = collection;
 
-  this.defaultServiceData = ['title', 'name', 'moduleUrl', 'apiUrl'];
+  //this.defaultServiceData = ['title', 'name', 'moduleUrl', 'apiUrl'];
   this.defaultClientData = ['name', 'clientUrl'];
 
-  this.statusNames = {
+  /*this.statusNames = {
     0: "Unsubscribed",
     1: "Subscribed"
-  };
+  };*/
 
   console.log("Initialize new base service");
 
@@ -27,7 +27,7 @@ function BaseService(app, collection) {
     this.db = this.app.db;
 
   } catch (err) {
-    this.app.log.error(err);
+    console.error(err);
     next(err);
   }
 }
@@ -42,7 +42,7 @@ BaseService.prototype.CheckStack = function (next) {
     return new Promise(function (resolve, reject) {
       self.Serve(record, reject);
     });
-  });
+  })
 
   Promise.all(checkList)
     .then(function (resp) {
@@ -65,7 +65,7 @@ BaseService.prototype.Call = function (clientData, next) {
     },
     err => {
       if (err) {
-        console.error(err);
+        console.error("Call error: "+err);
         return next(err);
       }
 
@@ -77,44 +77,37 @@ BaseService.prototype.Call = function (clientData, next) {
 }
 
 BaseService.prototype.Ping = function (clientUrl, next) {
-  var record = this.db[this.collection].findOne({clientUrl: clientUrl});
-  if (!record) return next("There are no subscriber with ID: " + clientUrl);
+  try {
+    var record = this.db[this.collection].findOne({clientUrl: clientUrl});
+    if (!record) return next("There are no subscriber with ID: " + clientUrl);
 
-  if (record.status === 0) return next("Subscriber with ID: " + clientUrl + " is not subscribed. Please make a new call to the service.");
+    if (record.status === 0) return next("Subscriber with ID: " + clientUrl + " is not subscribed. Please make a new call to the service.");
 
-  next(null, record);
-}
+    next(null, record);
+  } catch(err) {
+    next(err);
+  }
+};
 
 BaseService.prototype.Serve = function (clientData, next) {
   var self = this,
-    config = this.app.config;
+  configForm = this.app.serviceConfig;
 
+  var clientUrl = clientData.clientUrl;
+  if(!/http/.test(clientUrl)) {
+    clientUrl = subscriptionConfig.protocol + "://" + clientUrl;
+  }
   async.auto({
     send: function (next) {
-      var openPort = config.port !== 80 ? ":" + config.port : "",
-        protocolMatcher = /(http|https|tcp):\/\//,
-        protocol = config.url.match(protocolMatcher).length ? config.url.match(protocolMatcher)[0] : "",
-        urlMatch = new RegExp('/(\)/'),
-        splitter = function (slice, index) {
-          return index == 0 ? slice + openPort : slice
-        },
-        moduleUrl = protocol + config.url.replace(protocolMatcher, "").split('/').map(splitter).join('/'),
-        apiUrl = protocol + config.apiUrl.replace(protocolMatcher, "").split('/').map(splitter).join('/'),
-        sendData = {
-          moduleUrl: moduleUrl,
-          apiUrl: apiUrl,
-          name: config.serviceData.name,
-          title: config.serviceData.title
-        };
-      console.log(sendData);
       request
         .post({
-            url: subscriptionConfig.protocol + "://" + clientData.clientUrl + "/" + subscriptionConfig.method,
-            form: sendData
+            url: clientUrl + "/" + subscriptionConfig.method,
+            form: configForm
           },
           function (err, response, body) {
             if (err || response.statusCode !== 200) {
-              err = body || "An error occured when trying to send post req to: " + clientData.clientUrl;
+
+              err = err || "An error occured when trying to send post req to: " + clientData.clientUrl;
               console.error(err);
               return next(err);
             }
@@ -142,7 +135,7 @@ BaseService.prototype.Serve = function (clientData, next) {
         errorMessage = err;
       } finally {
         if (errorMessage !== undefined || updated.updated !== 1) {
-          errorMessage = errorMessage || "There are error happend when trying to update DB record: " + JSON.stringify(clientData);
+          errorMessage = errorMessage || "There is an error when trying to update DB record: " + JSON.stringify(clientData);
           console.error(errorMessage);
           return next(errorMessage);
         }
@@ -154,7 +147,7 @@ BaseService.prototype.Serve = function (clientData, next) {
   });
 
   next();
-}
+};
 
 BaseService.prototype.AddClient = function (clientData, next) {
 
@@ -162,7 +155,7 @@ BaseService.prototype.AddClient = function (clientData, next) {
 
   if (!clientData || !clientData.clientUrl) {
     var err = "There no clientUrl in request: " + JSON.stringify(clientData);
-    this.app.log.error(err);
+    console.error(err);
     return next(err);
   }
 
@@ -179,7 +172,7 @@ BaseService.prototype.AddClient = function (clientData, next) {
         record = record || clientData;
         next(null, record);
       },
-      // insert record to the DB? or if it already in DB - send request to subscriber
+      // insert record to the DB or if it already in DB - send request to subscriber
       insert: ['recordCheck', function (next, record) {
         record = record.recordCheck;
         // check if subscriber is in DB, and if it is - send request to him
@@ -209,7 +202,7 @@ BaseService.prototype.AddClient = function (clientData, next) {
     });
 
   next();
-}
+};
 
 BaseService.prototype.Validate = function (clientData, next) {
   var self = this, clientObjectKeys = Object.keys(clientData);
@@ -223,12 +216,14 @@ BaseService.prototype.Validate = function (clientData, next) {
     results.clientUrl = "http://" + results.clientUrl;
   }
 
-  var resultingData = {};
+  var resultingData = {}, param;
 
   results.forEach(param => {
     resultingData[param] = clientData[param];
   });
+
+
   next(null, resultingData);
-}
+};
 
 module.exports = BaseService;
