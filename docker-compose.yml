@@ -1,0 +1,7 @@
+web:
+  build: .
+  ports:
+    - "3002:3002"
+  environment:
+    - "SERVICE_URL=http://localhost:3002"
+    - "SERVICE_API_URL=http://localhost:3002/api"

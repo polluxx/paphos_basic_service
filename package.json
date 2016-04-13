@@ -2,7 +2,7 @@
   "name": "base-service",
   "version": "0.1.0",
   "description": "basic service blueprint",
-  "main": "start.js",
+  "main": "app.js",
   "dependencies": {
     "diskdb": "*",
     "convict": "^1.0.1",
@@ -13,12 +13,12 @@
     "body-parser": "^1.14.1"
   },
   "scripts": {
-    "run": "node start.js"
+    "start": "node app.js"
   },
   "devDependencies": {
     "mocha": "^2.4.5",
     "request": "^2.70.0",
     "should": "^8.3.0",
-    "supertest": "^1.2.0"
+    "supertest": "*"
   }
 }
