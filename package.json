@@ -13,7 +13,8 @@
     "body-parser": "^1.14.1"
   },
   "scripts": {
-    "start": "node app.js"
+    "start": "node app.js",
+    "tests": "mocha"
   },
   "devDependencies": {
     "mocha": "^2.4.5",
