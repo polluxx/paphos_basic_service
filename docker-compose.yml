@@ -3,4 +3,4 @@ web:
   ports:
     - "3002:3002"
   environment:
-    - SERVICE_URL=http://localhost:3002
+    - SERVICE_URL=http://172.17.0.1:3002
