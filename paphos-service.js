@@ -93,7 +93,6 @@ BaseService.prototype.serve = function (clientData, next) {
 
   async.auto({
     send: function (next) {
-
       request
         .post({
             url: clientData.clientUrl + "/" + subscriptionConfig.method,
@@ -133,7 +132,7 @@ BaseService.prototype.serve = function (clientData, next) {
           return next(errorMessage);
         }
 
-        console.info("Subscriber " + clientData.clientUrl + " was succesfully subscribed.");
+        console.info("Subscriber " + clientData.clientUrl + " was successfully subscribed.");
         next();
       }
     }]

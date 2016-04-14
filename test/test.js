@@ -139,6 +139,7 @@ describe("Tests", function () {
     });
 
     after(function (done) {
+      db[collection].remove({}, true);
       clientApp.server.close();
       serverCall.close();
       console.info("*** Stop test server ***");
