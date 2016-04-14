@@ -1,9 +1,8 @@
 web:
   #image: polluxx/paphos_basic_service
   build: .
-
   ports:
     - "3002:3002"
   environment:
     - SERVICE_URL=http://localhost:3002
-    - SERVICE_API_URL=http://localhost:3002/api
+    - HOST=http://localhost:3002

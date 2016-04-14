@@ -14,7 +14,8 @@
   },
   "scripts": {
     "start": "node app.js",
-    "tests": "mocha"
+    "tests": "mocha",
+    "hosts": "./hostDiscover.sh"
   },
   "devDependencies": {
     "mocha": "^2.4.5",

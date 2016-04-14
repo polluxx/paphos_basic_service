@@ -1,10 +1,7 @@
 #!/bin/bash
 
-HOST=$SERVICE_URL
 echo " - Discover current host:{$HOST}"
 
-sed -i 's/CURR_HOST/'"$HOST"'/g' paphos-discover.json
-
-echo $SERVICE_URL
+sed -i 's_CURRHOST_'"$HOST"'_' paphos-discover.json
 
 echo " - Done."

@@ -1,7 +1,7 @@
 {
   "title": "Base service",
   "name": "base_service",
-  "moduleUrl": "CURR_HOST",
-  "clientUrl": "CURR_HOST/api",
-  "pingUrl": "CURR_HOST/ok"
+  "moduleUrl": "CURRHOST",
+  "clientUrl": "CURRHOST/api",
+  "pingUrl": "CURRHOST/ok"
 }
