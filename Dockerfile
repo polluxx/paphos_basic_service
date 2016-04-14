@@ -8,6 +8,8 @@ COPY ./ /src
 WORKDIR /src
 RUN npm install
 
+CMD sh hostDiscover.sh
+
 EXPOSE 3002
 
 CMD npm start
