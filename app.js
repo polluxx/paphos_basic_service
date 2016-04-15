@@ -62,14 +62,30 @@ async.auto({
       resp.status(code).json(responseRes);
     }
 
+
     app.post('/api/subscription/subscribe', (req, resp, next) => {
-      data.service.callService(req.body, function (err) {
+      data.service.subscribe(req.body, function (err) {
         if (err) {
           response(resp, err, 500);
           return next(err);
         }
 
         response(resp, "Your request was successfull. Wait for response please.", 200);
+      });
+    });
+
+    app.post('/api/subscription/unsubscribe', (req, resp, next) => {
+      if (!req.body || !req.body.clientUrl) {
+        return response(resp, "You must provide clientUrl param!", 500);
+      }
+
+      data.service.unsubscribe(req.body.clientUrl, function(err, result) {
+        if (err) {
+          response(resp, err, 500);
+          return next(err);
+        }
+        
+        response(resp, result, 200);
       });
     });
 

@@ -1,5 +1,6 @@
 web:
   image: polluxx/paphos_basic_service
+  #build: .
   ports:
     - "3002:3002"
   environment:

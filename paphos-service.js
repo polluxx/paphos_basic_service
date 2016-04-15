@@ -52,7 +52,7 @@ BaseService.prototype.checkStack = function (next) {
     });
 };
 
-BaseService.prototype.callService = function (clientData, next) {
+BaseService.prototype.subscribe = function (clientData, next) {
   var self = this;
 
   async.auto({
@@ -62,17 +62,44 @@ BaseService.prototype.callService = function (clientData, next) {
       saveClient: ['validate', (next, result) => {
         self.addClient(result.validate, next);
       }]
-    },
-    err => {
-      if (err) {
-        console.error("Call error: "+err);
-        return next(err);
-      }
+  },
+  err => {
+    if (err) {
+      console.error("Call error: "+err);
+      return next(err);
+    }
 
-      console.info("Successfully connected with client ID - " + clientData.clientUrl);
-      next();
-    });
-}
+    console.info("Successfully connected with client ID - " + clientData.clientUrl);
+    next();
+  });
+};
+
+BaseService.prototype.unsubscribe = function(clientUrl, next) {
+  var self = this;
+  async.auto({
+      validate: next => {
+        var record = self.db[self.collection].findOne({clientUrl: clientUrl});
+        if(!record) return next("No record found with url: " + clientUrl);
+
+        next(null, record);
+      },
+      remove: ['validate', (next, result) => {
+        try {
+          self.db[self.collection].remove({clientUrl: result.validate.clientUrl}, true);
+        } catch(err) {
+          return next(err);
+        }
+        next(null, "Successfuly removed.");
+      }]
+  },
+  (err, result) => {
+    if(err) {
+      return next(err);
+    }
+    
+    next(null, result.remove);
+  });
+};
 
 BaseService.prototype.ping = function (clientUrl, next) {
   try {

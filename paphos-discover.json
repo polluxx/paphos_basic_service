@@ -1,7 +1,14 @@
 {
-  "title": "Base service",
-  "name": "base_service",
+  "title": "Base service test",
+  "name": "base_service_1",
   "moduleUrl": "CURRHOST",
   "clientUrl": "CURRHOST/api",
-  "pingUrl": "CURRHOST/ok"
+  "pingUrl": "CURRHOST/ok",
+  "entryPages": [
+    {
+      "title": "Test",
+      "type": "iframe",
+      "src": "..."
+    }
+  ]
 }
